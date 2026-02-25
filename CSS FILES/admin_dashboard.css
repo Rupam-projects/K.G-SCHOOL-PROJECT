@@ -308,3 +308,41 @@ body { background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #
     width: 100% !important;
     min-width: 0 !important;
 }
+/* ==================================================
+   🔥 ANTI-DISCO / MOBILE SCREEN GLITCH FIX 🔥
+   ================================================== */
+@media (max-width: 1024px) {
+    /* 1. Stop Address Bar Jump (Disco Effect) */
+    html, body {
+        height: 100% !important; 
+        width: 100% !important;
+        overflow: hidden !important;
+        position: fixed !important; 
+    }
+    
+    .dashboard-layout {
+        height: 100% !important;
+        position: relative !important;
+    }
+
+    /* 2. Force Mobile GPU Hardware Acceleration (Stops White Flashes) */
+    .main-content, .glass-card, .tab-section, .dashboard-layout {
+        transform: translateZ(0) !important;
+        -webkit-transform: translateZ(0) !important;
+        will-change: transform, opacity !important;
+        backface-visibility: hidden !important;
+        -webkit-backface-visibility: hidden !important;
+    }
+
+    /* 3. Reduce Blur Load on Mobile GPU (Makes it ultra-smooth) */
+    .glass-card {
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+    }
+    
+    /* 4. Pause heavy background animation on phones to save battery & stop lag */
+    body {
+        animation: none !important;
+        background-position: center !important;
+    }
+}
