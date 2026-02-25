@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 5. UI BUTTONS & MODALS LOGIC
+    // 5. 🔥 BUG-FREE UI BUTTONS & MODALS LOGIC 🔥
     // ==========================================
     const fullGalleryModal = document.getElementById('full-gallery-modal');
     document.getElementById('view-more-btn')?.addEventListener('click', (e) => { 
@@ -118,26 +118,61 @@ document.addEventListener('DOMContentLoaded', () => {
         if(navDropdown) navDropdown.classList.toggle('active');
     });
 
-    const modals = ['contact', 'academics', 'admission', 'activities', 'timings', 'office'];
-    modals.forEach(m => {
-        let btnDesktop = document.getElementById(`${m}-widget-btn`) || document.getElementById(`contact-btn-desktop`);
-        let btnMobile = document.getElementById(`${m}-btn-mobile`);
-        let modal = document.getElementById(`${m}-modal`);
-        let closeBtn = document.getElementById(`close-${m}-btn`) || document.getElementById(`close-contact-btn`);
+    // 🔴 THE REAL FIX: Close all modals before opening a new one 🔴
+    function closeAllModals() {
+        document.querySelectorAll('.contact-modal-overlay').forEach(modal => {
+            modal.classList.remove('active');
+        });
+    }
 
-        if (btnDesktop && modal) btnDesktop.addEventListener('click', (e) => { e.preventDefault(); modal.classList.add('active'); });
-        if (btnMobile && modal) btnMobile.addEventListener('click', (e) => { e.preventDefault(); modal.classList.add('active'); if(navDropdown) navDropdown.classList.remove('active'); });
-        if (closeBtn && modal) closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+    // Mapping Buttons to their exact Modals safely
+    const modalMap = {
+        'contact-btn-desktop': 'contact-modal',
+        'contact-btn-mobile': 'contact-modal',
+        'academics-widget-btn': 'academics-modal',
+        'admission-widget-btn': 'admission-modal',
+        'activities-widget-btn': 'activities-modal',
+        'timings-btn': 'timings-modal',
+        'office-btn': 'office-modal'
+    };
+
+    // Attach listeners safely without overlapping
+    for (const [btnId, modalId] of Object.entries(modalMap)) {
+        let btn = document.getElementById(btnId);
+        let modal = document.getElementById(modalId);
+        
+        if (btn && modal) {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                closeAllModals(); // Close every popup first
+                modal.classList.add('active'); // Open only the required one
+                if(navDropdown) navDropdown.classList.remove('active'); // Hide mobile menu if open
+            });
+        }
+    }
+
+    // Back buttons inside Academics Modal
+    document.getElementById('back-from-timings')?.addEventListener('click', () => {
+        closeAllModals();
+        document.getElementById('academics-modal')?.classList.add('active');
+    });
+    
+    document.getElementById('back-from-office')?.addEventListener('click', () => {
+        closeAllModals();
+        document.getElementById('academics-modal')?.classList.add('active');
     });
 
-    let timingsModal = document.getElementById('timings-modal');
-    let officeModal = document.getElementById('office-modal');
-    let academicsModal = document.getElementById('academics-modal');
-    
-    document.getElementById('timings-btn')?.addEventListener('click', (e) => { e.preventDefault(); academicsModal?.classList.remove('active'); timingsModal?.classList.add('active'); });
-    document.getElementById('office-btn')?.addEventListener('click', (e) => { e.preventDefault(); academicsModal?.classList.remove('active'); officeModal?.classList.add('active'); });
-    document.getElementById('back-from-timings')?.addEventListener('click', () => { timingsModal?.classList.remove('active'); academicsModal?.classList.add('active'); });
-    document.getElementById('back-from-office')?.addEventListener('click', () => { officeModal?.classList.remove('active'); academicsModal?.classList.add('active'); });
+    // Universal Close Button logic
+    document.querySelectorAll('.close-contact').forEach(closeBtn => {
+        closeBtn.addEventListener('click', closeAllModals);
+    });
+
+    // Close on clicking outside the modal box
+    window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('contact-modal-overlay')) {
+            closeAllModals();
+        }
+    });
 });
 
 // ==========================================
