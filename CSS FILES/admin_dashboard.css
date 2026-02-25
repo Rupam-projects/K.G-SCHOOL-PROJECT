@@ -346,3 +346,48 @@ body { background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #
         background-position: center !important;
     }
 }
+/* ==================================================
+   🔥 KEYBOARD & GLITCH FIX (ULTIMATE MOBILE SAFE) 🔥
+   ================================================== */
+@media (max-width: 1024px) {
+    /* 1. Body ko lock nahi karenge, warna keyboard khulne pe screen fategi */
+    html, body {
+        height: 100% !important; 
+        width: 100% !important;
+        overflow-x: hidden !important; /* Sirf aaju-baaju ka scroll band */
+        overflow-y: auto !important;
+        position: relative !important; /* FIXED hata diya */
+        overscroll-behavior-y: none !important; /* Bounce effect roknne ke liye */
+    }
+    
+    /* 2. Keyboard aane par popup ko safe rakhne ka logic */
+    .contact-modal-overlay.active {
+        align-items: flex-start !important; /* Popup ko screen ke center se hata kar Top pe laayega */
+        padding-top: 15% !important; /* Upar se thodi jagah chhodega */
+        overflow-y: auto !important;
+    }
+    
+    .auth-box, .profile-modal-box {
+        margin-bottom: 50vh !important; /* Keyboard ke liye neeche jagah banayega */
+        transform: none !important; /* Animation issue roknne ke liye */
+    }
+
+    /* 3. Hardware Acceleration (Stops White Flashes) */
+    .glass-card, .dashboard-layout {
+        transform: translateZ(0) !important;
+        -webkit-transform: translateZ(0) !important;
+        will-change: transform, opacity !important;
+    }
+
+    /* 4. Reduce GPU Blur Load */
+    .glass-card {
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+    }
+    
+    /* 5. Pause Heavy Background Animation */
+    body {
+        animation: none !important;
+        background-position: center !important;
+    }
+}
