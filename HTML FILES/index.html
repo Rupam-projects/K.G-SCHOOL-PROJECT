@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floor Impact Glass Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../CSS FILES/style.css?v=6">
+</head>
+<body>
+
+    <div id="bg-image-holder"></div>
+    <div id="particles-container"></div>
+
+    <header class="ios-glass-header">
+        
+        <a href="home.html" class="home-btn">
+            <i class="fa-solid fa-house"></i> <span>Home</span>
+        </a>
+
+        <button class="about-btn" onclick="showAbout()">
+            <i class="fa-solid fa-circle-info"></i> <span>About Us</span>
+        </button>
+
+        <div class="school-name"><img src="../ASSETS/IMAGES/logo.png" class="premium-logo"> NETRA K.G CENTER</div>
+        
+        <div class="school-details">
+            <span><i class="fa-solid fa-building"></i> ESTD: 1858</span>
+            <span><a href="https://www.google.com/maps/search/?api=1&query=Netra,+West+Bengal" target="_blank" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 6px; cursor: pointer;"><i class="fa-solid fa-location-dot"></i> Address: Netra, West Bengal</a></span>
+            <span><a href="tel:+918910495393" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 6px; cursor: pointer;"><i class="fa-solid fa-phone"></i> +91 8910495393</a></span>
+            <span><a href="mailto:info@netrakg.com" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 6px; cursor: pointer;"><i class="fa-solid fa-envelope"></i> guharupam73@gmail.com</a></span>
+        </div>
+    </header>
+    
+    <main>
+        <div class="box-container ios-glass-card state-active" id="selection-view">
+            <h1>Welcome</h1>
+            <p class="subtitle">Sign in to your account</p>
+            <div class="cards">
+                <div class="card ios-glass-panel" onclick="showLogin('student')">
+                    <i class="fa-solid fa-user-graduate card-icon student-icon"></i>
+                    <h2>Student</h2>
+                </div>
+                <div class="card ios-glass-panel" onclick="showLogin('admin')">
+                    <i class="fa-solid fa-user-tie card-icon admin-icon"></i>
+                    <h2>Admin</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="box-container login-wrapper ios-glass-card state-hidden" id="student-login">
+            <div class="form-header">
+                <button class="back-btn" onclick="goBack('student')"><i class="fa-solid fa-chevron-left"></i></button>
+                <h2>Student Login</h2>
+            </div>
+            <form id="studentForm" onsubmit="handleLogin(event, 'student-login', 'studentForm', 'studentBtn')">
+                <div class="input-group">
+                    <i class="fa-solid fa-id-card input-icon"></i>
+                    <input type="text" placeholder="Student ID" required>
+                </div>
+                <div class="input-group">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input type="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="submit-btn ios-btn-primary" id="studentBtn">
+                    <span class="btn-text">Sign In</span>
+                </button>
+            </form>
+        </div>
+
+        <div class="box-container login-wrapper ios-glass-card state-hidden" id="admin-login">
+            <div class="form-header">
+                <button class="back-btn" onclick="goBack('admin')"><i class="fa-solid fa-chevron-left"></i></button>
+                <h2>Admin Login</h2>
+            </div>
+            <form id="adminForm" onsubmit="handleLogin(event, 'admin-login', 'adminForm', 'adminBtn')">
+                <div class="input-group">
+                    <i class="fa-solid fa-user input-icon"></i>
+                    <input type="text" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input type="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="submit-btn ios-btn-secondary" id="adminBtn">
+                    <span class="btn-text">Sign In</span>
+                </button>
+            </form>
+        </div>
+
+        <div class="box-container login-wrapper ios-glass-card state-hidden" id="about-view">
+            <div class="form-header">
+                <button class="back-btn" onclick="closeAbout()"><i class="fa-solid fa-chevron-left"></i></button>
+                <h2>About Us</h2>
+            </div>
+            <div style="text-align: center; color: var(--text-secondary); font-size: 1rem; line-height: 1.6; padding: 10px;">
+                <p><strong>NETRA K.G CENTER</strong> is a premier educational institution established in 1858. We focus on providing holistic education, modern facilities, and a safe environment to nurture the leaders of tomorrow.</p>
+                <br>
+                <p><i class="fa-solid fa-location-dot" style="color:var(--ios-blue);"></i> Netra, West Bengal</p>
+                <p>Thank you for visiting our portal!</p>
+            </div>
+        </div>
+    </main>
+    <script src="../JS FILES/script.js"></script>
+    <div id="universal-error-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 100000; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; pointer-events: none; transition: 0.3s ease;">
+        <div style="background: rgba(255,255,255,0.95); width: 90%; max-width: 380px; border-radius: 20px; padding: 40px 30px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.2); border-top: 5px solid #dc3545; transform: translateY(30px); transition: 0.4s ease;" id="error-box-anim">
+            <div style="color: #dc3545; font-size: 4rem; margin-bottom: 15px;"><i class="fa-solid fa-circle-exclamation fa-shake" style="--fa-animation-duration: 2.5s;"></i></div>
+            <h2 style="color: #1c1c1e; font-size: 1.6rem; font-weight: 800; margin-bottom: 10px;">Access Denied</h2>
+            
+            <p id="error-msg-text" style="color: #444; font-weight: 600; font-size: 1.05rem; margin-bottom: 25px;">Invalid Credentials!</p>
+            
+            <button onclick="closeErrorPopup()" style="background: #dc3545; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 10px rgba(220,53,69,0.3); display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;"><i class="fa-solid fa-rotate-left"></i> Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        // JS se hint parameter hata diya
+        function showErrorPopup(msg) {
+            document.getElementById('error-msg-text').innerText = msg;
+            const modal = document.getElementById('universal-error-modal');
+            const box = document.getElementById('error-box-anim');
+            modal.style.opacity = '1'; modal.style.visibility = 'visible'; modal.style.pointerEvents = 'all';
+            box.style.transform = 'translateY(0)';
+        }
+        function closeErrorPopup() {
+            const modal = document.getElementById('universal-error-modal');
+            const box = document.getElementById('error-box-anim');
+            modal.style.opacity = '0'; modal.style.visibility = 'hidden'; modal.style.pointerEvents = 'none';
+            box.style.transform = 'translateY(30px)';
+        }
+    </script>
+</body>
+</html>

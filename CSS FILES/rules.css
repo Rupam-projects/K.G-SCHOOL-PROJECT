@@ -1,0 +1,218 @@
+/* =========================================
+   VARIABLES & THEME
+   ========================================= */
+:root { 
+    --ios-blue: #007AFF; --text-primary: #1C1C1E; --text-secondary: #555; 
+    --glass-bg: rgba(255, 255, 255, 0.4); --glass-border: rgba(255, 255, 255, 0.6); 
+    --glass-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); 
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
+
+/* IOS BULLETPROOF SCROLL FIX */
+html { scroll-behavior: smooth; }
+body { 
+    background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #e0c3fc); 
+    background-size: 400% 400%; animation: gradientBG 15s ease infinite; 
+    min-height: 100vh; display: flex; flex-direction: column; color: var(--text-primary); overflow-x: clip; 
+}
+@keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+/* =========================================
+   BACKGROUND & PARTICLES (FIXED OPACITY)
+   ========================================= */
+#bg-image-holder { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-image: url('../ASSETS/IMAGES/school-bg.avif'); background-size: cover; background-position: center; opacity: 0.3; filter: blur(3px) grayscale(20%); pointer-events: none; }
+#particles-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+.glass-particle { position: absolute; bottom: -100px; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); animation: floatUp linear infinite; }
+.shape-circle { border-radius: 50%; } .shape-square { border-radius: 15px; transform: rotate(45deg); } .shape-triangle { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); background: rgba(255, 255, 255, 0.2); }
+
+/* YAHAN OPACITY 1 FIX ADD KIYA HAI TAAKI PARTICLES DIKHEIN */
+@keyframes floatUp { 
+    0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0; } 
+    10% { opacity: 1; } 
+    90% { opacity: 1; } 
+    100% { transform: translateY(-120vh) rotate(360deg) scale(1.5); opacity: 0; } 
+}
+
+/* =========================================
+   HEADER
+   ========================================= */
+.ios-glass-header { position: relative; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(40px); border-bottom: 1px solid var(--glass-border); padding: 20px; z-index: 100; text-align: center; }
+.school-name { font-size: 2.2rem; font-weight: 800; margin: 0; letter-spacing: -0.5px;} 
+.school-name i { color: var(--ios-blue); margin-right: 8px;}
+.school-details { font-size: 0.9rem; font-weight: 600; color: var(--ios-blue); margin-top: 5px; }
+
+/* =========================================
+   LIQUID GLASS HOME BUTTON
+   ========================================= */
+.home-btn { 
+    -webkit-appearance: none; appearance: none; 
+    position: absolute; top: 50%; transform: translateY(-50%); left: 40px; flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); 
+    border: 1px solid rgba(255, 255, 255, 0.3); border-top: 1px solid rgba(255, 255, 255, 0.9); border-left: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: inset 5px 5px 10px rgba(255, 255, 255, 0.4), inset -4px -4px 8px rgba(0, 0, 0, 0.05), inset 2px 2px 2px rgba(255, 255, 255, 1), 0 8px 20px rgba(0, 0, 0, 0.1);
+    padding: 10px 22px; border-radius: 30px; display: flex; align-items: center; justify-content: center; gap: 8px; 
+    cursor: pointer; transition: all 0.3s ease; text-decoration: none; color: var(--text-primary); font-weight: 700; z-index: 10; min-width: 130px;
+}
+.home-btn i { font-size: 1.1rem; color: var(--ios-blue); filter: drop-shadow(0px 1px 2px rgba(255, 255, 255, 0.8)); margin: 0; }
+.home-btn span { display: inline-block; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+.home-btn:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-50%) scale(1.05); box-shadow: inset 8px 8px 15px rgba(255, 255, 255, 0.6), inset 3px 3px 3px rgba(255, 255, 255, 1), 0 12px 25px rgba(0, 0, 0, 0.15); }
+
+/* MAIN CONTENT BOX */
+main { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; overflow-y: auto; }
+.ios-glass-card { background: var(--glass-bg); backdrop-filter: blur(50px); border: 2px solid var(--glass-border); border-radius: 36px; box-shadow: var(--glass-shadow); }
+#rules-view { position: relative; padding: 70px 40px 50px 40px; width: 100%; max-width: 850px; text-align: center; margin-bottom: 50px; }
+
+/* =========================================
+   METALLIC EXAM BOARD CLIP (DEAD-CENTER FIX)
+   ========================================= */
+.board-clip { 
+    position: absolute; 
+    top: -18px; 
+    left: 0; right: 0; margin: 0 auto; 
+    width: 130px; height: 40px; 
+    background: linear-gradient(180deg, #f5f5f5 0%, #c4c4c4 40%, #999999 100%); 
+    border-radius: 8px 8px 12px 12px; 
+    box-shadow: 0 15px 25px rgba(0,0,0,0.2), inset 0 3px 5px rgba(255,255,255,0.9), inset 0 -2px 5px rgba(0,0,0,0.4); 
+    border: 1px solid #888; z-index: 20; 
+}
+.board-clip::before { 
+    content: ''; position: absolute; top: -10px; 
+    left: 0; right: 0; margin: 0 auto; 
+    width: 70px; height: 14px; 
+    background: linear-gradient(180deg, #ffffff 0%, #a6a6a6 100%); 
+    border-radius: 6px; border: 1px solid #777; 
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2), inset 0 2px 3px rgba(255,255,255,0.8); 
+}
+.board-clip::after { 
+    content: ''; position: absolute; bottom: 6px; 
+    left: 0; right: 0; margin: 0 auto; 
+    width: 80%; height: 3px; background: rgba(0,0,0,0.2); 
+    border-radius: 50%; box-shadow: 0 1px 0 rgba(255,255,255,0.5); 
+}
+
+/* PAGE TITLE & SUBTITLE */
+.page-title { font-size: 2.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 5px; } 
+.page-title i { color: var(--ios-blue); margin-right: 10px; }
+.subtitle { color: #d70015; font-weight: 700; margin-bottom: 35px; font-size: 1.1rem; }
+
+/* RULES LIST */
+.rules-list { list-style: none; display: flex; flex-direction: column; gap: 20px; text-align: left; }
+.rules-list li { display: flex; align-items: flex-start; gap: 18px; background: rgba(255,255,255,0.5); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.3s ease; }
+.rules-list li:hover { transform: translateX(8px); background: rgba(255,255,255,0.9); border-color: var(--ios-blue); box-shadow: 0 10px 25px rgba(0,122,255,0.1); }
+.rule-icon { width: 55px; height: 55px; background: linear-gradient(135deg, #007AFF, #0056b3); color: white; display: flex; justify-content: center; align-items: center; border-radius: 15px; font-size: 1.5rem; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,122,255,0.3); }
+.rule-text h3 { font-size: 1.3rem; color: var(--text-primary); margin-bottom: 8px; font-weight: 800; }
+.rule-text p { font-size: 1.05rem; color: var(--text-secondary); line-height: 1.6; font-weight: 500; }
+
+.state-active { animation: dropIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+@keyframes dropIn { 0% { transform: translateY(-50px) scale(0.9); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+
+/* ========================================================
+   STRICT MOBILE RESPONSIVENESS
+   ======================================================== */
+@media (max-width: 1024px) {
+    .ios-glass-header { padding-left: 65px !important; padding-right: 65px !important; } 
+    .school-name { font-size: 1.4rem; }
+    
+    .home-btn { 
+        left: 15px !important; 
+        width: 40px !important; height: 40px !important; 
+        min-width: 40px !important; min-height: 40px !important; 
+        max-width: 40px !important; max-height: 40px !important; 
+        padding: 0 !important; border-radius: 50% !important; 
+        justify-content: center !important;
+    } 
+    .home-btn span { display: none !important; } 
+    .home-btn i { font-size: 1.2rem !important; margin: 0 !important; }
+    main { padding-top: 60px !important; } 
+}
+@media (max-width: 600px) {
+    main { padding: 60px 15px 30px 15px !important; } 
+    #rules-view { padding: 60px 15px 30px 15px; border-radius: 28px; } 
+    .page-title { font-size: 2rem; }
+    
+    .board-clip { width: 100px; height: 32px; top: -14px; } 
+    .board-clip::before { width: 55px; height: 11px; top: -8px; }
+    
+    .rules-list li { flex-direction: column; align-items: center; text-align: center; padding: 20px; gap: 12px;}
+    .rule-icon { margin-bottom: 5px; }
+}
+
+/* ==========================================
+   PREMIUM SCHOOL LOGO DESIGN (ALL PAGES)
+   ========================================== */
+.premium-logo {
+    height: 45px;
+    width: 45px;
+    object-fit: cover; /* Logo stretch nahi hoga */
+    border-radius: 50%; /* Ekdum Perfect Gol */
+    border: 2px solid rgba(255, 255, 255, 0.9); /* White premium border */
+    box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3); /* Neela (Blue) Glow Effect */
+    vertical-align: middle;
+    margin-right: 12px;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); /* Makkhan animation */
+    background: white; /* Agar PNG transparent hai toh peeche white base dega */
+}
+
+/* Hover karne pe glow aur bada hoga aur halka sa ghumega */
+.premium-logo:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 8px 25px rgba(0, 122, 255, 0.6);
+    border-color: var(--ios-blue);
+}
+
+/* -----------------------------------------------
+   BADE LOGOS KE LIYE FIX (Login Page & Dashboard) 
+   ----------------------------------------------- */
+.school-name .premium-logo,
+.school-logo-mini .premium-logo {
+    height: 55px;
+    width: 55px;
+    margin-right: 15px;
+    border: 3px solid white;
+    box-shadow: 0 8px 20px rgba(0, 122, 255, 0.25);
+}
+
+/* FOOTER LOGO FIX */
+.footer-brand .premium-logo {
+    height: 50px;
+    width: 50px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* MOBILE RESPONSIVENESS */
+@media (max-width: 768px) {
+    .premium-logo { 
+        height: 35px; width: 35px; margin-right: 8px; border-width: 1px;
+    }
+    .school-name .premium-logo, 
+    .school-logo-mini .premium-logo { 
+        height: 45px; width: 45px; 
+    }
+}
+
+/* ==========================================
+   FIX: PREVENT SCHOOL NAME 2-LINE BREAK (MOBILE)
+   ========================================== */
+@media (max-width: 850px) {
+    .nav-brand {
+        display: flex !important;
+        align-items: center !important;
+        white-space: nowrap !important; /* Ye jadoo hai jo 2 line hone se rokega */
+    }
+    .nav-brand span {
+        font-size: 1.1rem !important; 
+        letter-spacing: 0px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-brand span {
+        font-size: 0.95rem !important; 
+    }
+    .premium-logo {
+        height: 30px !important; 
+        width: 30px !important; 
+        margin-right: 8px !important;
+    }
+}

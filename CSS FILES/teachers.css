@@ -1,0 +1,188 @@
+:root {
+    --ios-blue: #007AFF; --text-primary: #1C1C1E; --text-secondary: #555;
+    --glass-bg: rgba(255, 255, 255, 0.4); --glass-border: rgba(255, 255, 255, 0.6);
+    --glass-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); --card-height: 320px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
+html { scroll-behavior: smooth; }
+body { 
+    background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #e0c3fc); 
+    background-size: 400% 400%; animation: gradientBG 15s ease infinite; 
+    min-height: 100vh; display: flex; flex-direction: column; color: var(--text-primary); overflow-x: clip; 
+}
+@keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+/* Background Image - PATH DHYAN SE DEKH */
+#bg-image-holder { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background-image: url('../ASSETS/IMAGES/school-bg.avif'); background-size: cover; background-position: center; opacity: 0.3; filter: blur(3px) grayscale(20%); pointer-events: none; }
+#particles-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+.glass-particle { position: absolute; bottom: -100px; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); animation: floatUp linear infinite; }
+.shape-circle { border-radius: 50%; } .shape-square { border-radius: 15px; transform: rotate(45deg); } .shape-triangle { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); background: rgba(255, 255, 255, 0.2); }
+@keyframes floatUp { 0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(-120vh) rotate(360deg) scale(1.5); opacity: 0; } }
+
+.ios-glass-header { position: relative; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(40px); border-bottom: 1px solid var(--glass-border); padding: 20px; z-index: 100; text-align: center; }
+.school-name { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; margin: 0; }
+.school-name i { color: var(--ios-blue); margin-right: 8px; }
+.school-details { font-size: 0.9rem; font-weight: 600; color: var(--ios-blue); margin-top: 5px; }
+
+/* LIQUID GLASS HOME BUTTON */
+.home-btn { 
+    -webkit-appearance: none; appearance: none; 
+    position: absolute; top: 50%; transform: translateY(-50%); left: 40px; flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); 
+    border: 1px solid rgba(255, 255, 255, 0.3); border-top: 1px solid rgba(255, 255, 255, 0.9); border-left: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: inset 5px 5px 10px rgba(255, 255, 255, 0.4), inset -4px -4px 8px rgba(0, 0, 0, 0.05), inset 2px 2px 2px rgba(255, 255, 255, 1), 0 8px 20px rgba(0, 0, 0, 0.1);
+    padding: 10px 22px; border-radius: 30px; display: flex; align-items: center; justify-content: center; gap: 8px; 
+    cursor: pointer; transition: all 0.3s ease; text-decoration: none; color: var(--text-primary); font-weight: 700; z-index: 10; min-width: 130px;
+}
+.home-btn i { font-size: 1.1rem; color: var(--ios-blue); filter: drop-shadow(0px 1px 2px rgba(255, 255, 255, 0.8)); margin: 0; }
+.home-btn span { display: inline-block; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+.home-btn:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-50%) scale(1.05); box-shadow: inset 8px 8px 15px rgba(255, 255, 255, 0.6), inset 3px 3px 3px rgba(255, 255, 255, 1), 0 12px 25px rgba(0, 0, 0, 0.15); }
+.home-btn i { font-size: 1.1rem; color: var(--ios-blue); }
+.home-btn:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-50%) scale(1.05); }
+
+main { flex: 1; display: flex; justify-content: center; padding: 40px 20px; }
+.ios-glass-card { background: var(--glass-bg); backdrop-filter: blur(50px); border: 2px solid var(--glass-border); border-radius: 36px; box-shadow: var(--glass-shadow); }
+#teachers-view { position: relative; padding: 60px 40px 50px 40px; width: 100%; max-width: 1100px; text-align: center; margin-bottom: 50px; }
+
+/* 3D PIN */
+.realistic-pin-container { position: absolute; top: 25px; left: 25px; z-index: 20; }
+.pin-hole { position: absolute; top: 22px; left: 8px; width: 10px; height: 6px; background: rgba(0, 0, 0, 0.7); border-radius: 50%; }
+.pin-wrapper { position: absolute; top: 0; left: 0; transform-origin: 13px 25px; transform: rotate(-35deg); filter: drop-shadow(8px 10px 4px rgba(0,0,0,0.3)); display: flex; flex-direction: column; align-items: center; }
+.pin-head { width: 20px; height: 20px; background: radial-gradient(circle at 35% 35%, #ff5e5e, #cc0000); border-radius: 50%; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.4); }
+.pin-stem { width: 8px; height: 10px; background: linear-gradient(90deg, #990000, #ff1a1a, #990000); margin-top: -2px; border-radius: 0 0 3px 3px; }
+.pin-needle { width: 2px; height: 12px; background: linear-gradient(90deg, #777, #fff, #777); border-radius: 0 0 50% 50%; }
+
+.page-title { font-size: 2.5rem; font-weight: 800; color: var(--text-primary); }
+.page-title i { color: var(--ios-blue); margin-right: 10px; }
+.subtitle { color: var(--text-secondary); margin-bottom: 40px; font-weight: 500; }
+
+/* 3D FLIP CARD */
+.teachers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 30px; }
+.teacher-card-container { perspective: 1000px; height: var(--card-height); cursor: pointer; }
+.teacher-card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s ease; }
+.teacher-card.is-flipped { transform: rotateY(180deg); }
+
+.card-face {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border-radius: 24px; padding: 30px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+.card-front { z-index: 2; transform: rotateY(0deg); }
+.card-back { transform: rotateY(180deg); background: rgba(255, 255, 255, 0.9); border-color: var(--ios-blue); }
+
+.t-image { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 3px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.15); transition: 0.3s; }
+.teacher-card-container:hover .card-front .t-image { transform: scale(1.1); border-color: var(--ios-blue); }
+.t-name { font-size: 1.3rem; font-weight: 800; color: var(--text-primary); margin-bottom: 5px; }
+.t-role { font-size: 0.95rem; font-weight: 600; color: var(--ios-blue); margin-bottom: 12px; }
+.t-qual { background: rgba(0,0,0,0.05); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); }
+
+.contact-info { text-align: left; width: 100%; margin-top: 20px; }
+.contact-info p { margin-bottom: 12px; font-size: 0.9rem; color: var(--text-secondary); display: flex; gap: 10px; font-weight: 500; }
+.contact-info i { color: var(--ios-blue); font-size: 1rem; width: 20px; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .ios-glass-header { padding-left: 65px !important; padding-right: 65px !important; }
+    .school-name { font-size: 1.4rem; }
+    .home-btn { 
+        left: 15px !important; 
+        
+        /* STRICT DIMENSIONS - OVAL HONE SE ROKEGA */
+        width: 40px !important; height: 40px !important; 
+        min-width: 40px !important; min-height: 40px !important; 
+        max-width: 40px !important; max-height: 40px !important; 
+        
+        padding: 0 !important; border-radius: 50% !important; 
+    }
+    .home-btn span { display: none !important; }
+    .home-btn i { font-size: 1.2rem !important; margin: 0 !important; }
+    main { padding-top: 60px !important; } 
+    :root { --card-height: 300px; } 
+}
+@media (max-width: 600px) {
+    #teachers-view { padding: 50px 15px 30px 15px; border-radius: 28px; }
+    .teachers-grid { grid-template-columns: 1fr; gap: 25px; } 
+    :root { --card-height: 340px; } 
+    .realistic-pin-container { top: 15px; left: 15px; transform: scale(0.85) rotate(-35deg); }
+}
+
+/* ==========================================
+   PREMIUM SCHOOL LOGO DESIGN (ALL PAGES)
+   ========================================== */
+.premium-logo {
+    height: 45px;
+    width: 45px;
+    object-fit: cover; /* Logo stretch nahi hoga */
+    border-radius: 50%; /* Ekdum Perfect Gol */
+    border: 2px solid rgba(255, 255, 255, 0.9); /* White premium border */
+    box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3); /* Neela (Blue) Glow Effect */
+    vertical-align: middle;
+    margin-right: 12px;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); /* Makkhan animation */
+    background: white; /* Agar PNG transparent hai toh peeche white base dega */
+}
+
+/* Hover karne pe glow aur bada hoga aur halka sa ghumega */
+.premium-logo:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 8px 25px rgba(0, 122, 255, 0.6);
+    border-color: var(--ios-blue);
+}
+
+/* -----------------------------------------------
+   BADE LOGOS KE LIYE FIX (Login Page & Dashboard) 
+   ----------------------------------------------- */
+.school-name .premium-logo,
+.school-logo-mini .premium-logo {
+    height: 55px;
+    width: 55px;
+    margin-right: 15px;
+    border: 3px solid white;
+    box-shadow: 0 8px 20px rgba(0, 122, 255, 0.25);
+}
+
+/* FOOTER LOGO FIX */
+.footer-brand .premium-logo {
+    height: 50px;
+    width: 50px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* MOBILE RESPONSIVENESS */
+@media (max-width: 768px) {
+    .premium-logo { 
+        height: 35px; width: 35px; margin-right: 8px; border-width: 1px;
+    }
+    .school-name .premium-logo, 
+    .school-logo-mini .premium-logo { 
+        height: 45px; width: 45px; 
+    }
+}
+
+/* ==========================================
+   FIX: PREVENT SCHOOL NAME 2-LINE BREAK (MOBILE)
+   ========================================== */
+@media (max-width: 850px) {
+    .nav-brand {
+        display: flex !important;
+        align-items: center !important;
+        white-space: nowrap !important; /* Ye jadoo hai jo 2 line hone se rokega */
+    }
+    .nav-brand span {
+        font-size: 1.1rem !important; 
+        letter-spacing: 0px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-brand span {
+        font-size: 0.95rem !important; 
+    }
+    .premium-logo {
+        height: 30px !important; 
+        width: 30px !important; 
+        margin-right: 8px !important;
+    }
+}

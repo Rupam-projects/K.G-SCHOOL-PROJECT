@@ -1,0 +1,242 @@
+:root {
+    --ios-blue: #007AFF; --ios-orange: #FF9500;
+    --text-primary: #1C1C1E; --text-secondary: #555;
+    --glass-bg: rgba(255, 255, 255, 0.4);
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --glass-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+* {
+    margin: 0; padding: 0; box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+}
+
+body {
+    background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #e0c3fc);
+    background-size: 400% 400%; animation: gradientBG 15s ease infinite;
+    min-height: 100dvh; display: flex; flex-direction: column;
+    color: var(--text-primary); overflow: hidden; position: relative;
+    z-index: 0; width: 100%;
+}
+
+@keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+#bg-image-holder {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%;
+    z-index: -2; background-image: url('../ASSETS/IMAGES/school-bg.avif'); 
+    background-size: cover; background-position: center;
+    opacity: 0.3; filter: blur(3px) grayscale(20%); pointer-events: none; 
+}
+
+#particles-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; }
+.glass-particle {
+    position: absolute; bottom: -100px; background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); animation: floatUp linear infinite;
+}
+.shape-circle { border-radius: 50%; }
+.shape-square { border-radius: 15px; transform: rotate(45deg); }
+.shape-triangle { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); background: rgba(255, 255, 255, 0.2); }
+@keyframes floatUp { 0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(-120vh) rotate(360deg) scale(1.5); opacity: 0; } }
+
+
+/* ================= 1. HEADER LAYOUT (Cleaned Up) ================= */
+.ios-glass-header {
+    position: relative !important;
+    background: rgba(255, 255, 255, 0.5); 
+    backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+    border-bottom: 1px solid var(--glass-border); 
+    padding: 20px; z-index: 100; width: 100%;
+    text-align: center;
+}
+
+.school-name {
+    font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; margin: 0; 
+    line-height: 1.2;
+}
+.school-name i { color: var(--ios-blue); margin-right: 8px; }
+
+.school-details { font-size: 0.85rem; font-weight: 500; color: #555; display: flex; flex-wrap: wrap; justify-content: center; column-gap: 15px; row-gap: 8px; margin-top: 5px;}
+.school-details span { display: flex; align-items: center; gap: 6px; }
+.school-details span:not(:last-child)::after { content: "•"; padding-left: 15px; color: #999; }
+
+/* ================= 2. LEFT (HOME) & RIGHT (ABOUT) BUTTONS ================= */
+.about-btn, .home-btn {
+    -webkit-appearance: none; appearance: none;         
+    position: absolute !important;
+    top: 50% !important; transform: translateY(-50%) !important;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.05); 
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.9);
+    border-left: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: inset 5px 5px 10px rgba(255, 255, 255, 0.4), inset -4px -4px 8px rgba(0, 0, 0, 0.05), inset 2px 2px 2px rgba(255, 255, 255, 1), 0 8px 20px rgba(0, 0, 0, 0.1);
+    padding: 10px 22px; border-radius: 30px; 
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer; transition: all 0.4s ease; outline: none; z-index: 10;
+    min-width: 130px;
+    text-decoration: none;
+}
+
+/* Placement Check */
+.about-btn { right: 40px !important; left: auto !important; }
+.home-btn { left: 40px !important; right: auto !important; }
+
+.about-btn i, .home-btn i { font-size: 1.1rem; color: var(--ios-blue); filter: drop-shadow(0px 1px 2px rgba(255, 255, 255, 0.8)); margin: 0; }
+.about-btn span, .home-btn span { display: inline-block; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+
+.about-btn:hover, .home-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: inset 8px 8px 15px rgba(255, 255, 255, 0.6), inset 3px 3px 3px rgba(255, 255, 255, 1), 0 12px 25px rgba(0, 0, 0, 0.15);
+    transform: translateY(-50%) scale(1.05) !important; 
+}
+
+/* ================= 3. MAIN BOXES & ANIMATIONS ================= */
+main { flex: 1; position: relative; width: 100%; display: flex; justify-content: center; align-items: center; }
+.box-container { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -150vh); opacity: 0; visibility: hidden; }
+.state-active { z-index: 10; pointer-events: auto; visibility: visible; animation: dropIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.state-fall { z-index: 1; pointer-events: none; visibility: visible; animation: smashFloorAndFade 1.6s ease-in-out forwards; }
+.state-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+@keyframes dropIn { 0% { transform: translate(-50%, -150vh) rotate(-10deg); opacity: 0; } 100% { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; } }
+@keyframes smashFloorAndFade { 0% { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; } 25% { transform: translate(-50%, 35vh) rotate(8deg) scale(0.9); opacity: 1; } 35% { transform: translate(-50%, 32vh) rotate(6deg) scale(0.95); opacity: 1; } 45% { transform: translate(-50%, 35vh) rotate(8deg) scale(0.9); opacity: 1; } 80% { transform: translate(-50%, 35vh) rotate(8deg) scale(0.9); opacity: 1; filter: blur(0px); } 100% { transform: translate(-50%, 35vh) rotate(8deg) scale(0.8); opacity: 0; filter: blur(10px); } }
+
+.ios-glass-card { background: var(--glass-bg); backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px); border: 2px solid var(--glass-border); border-radius: 36px; box-shadow: var(--glass-shadow); }
+#selection-view { padding: 60px 40px; width: 100%; max-width: 550px; text-align: center; }
+#selection-view h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: 5px; }
+.subtitle { color: var(--text-secondary); margin-bottom: 40px; font-weight: 500; }
+.cards { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+.card { background: rgba(255, 255, 255, 0.6); border: 1px solid #fff; padding: 40px 30px; border-radius: 28px; cursor: pointer; width: 190px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.card:hover { transform: translateY(-10px) scale(1.05); background: #fff; box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+.card-icon { font-size: 3.5rem; margin-bottom: 15px; }
+.student-icon { color: var(--ios-blue); }
+.admin-icon { color: var(--ios-orange); }
+
+.login-wrapper { padding: 45px 35px; width: 100%; max-width: 400px; }
+.form-header { display: flex; align-items: center; justify-content: center; margin-bottom: 35px; position: relative; }
+.back-btn { position: absolute; left: 0; background: transparent; border: none; font-size: 1.5rem; color: var(--text-primary); cursor: pointer; transition: transform 0.2s; }
+.back-btn:hover { transform: translateX(-5px); }
+.form-header h2 { font-size: 1.8rem; font-weight: 700; }
+.input-group { position: relative; margin-bottom: 25px; }
+.input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #666; font-size: 1.2rem; }
+.input-group input { width: 100%; padding: 18px 18px 18px 50px; border: 2px solid rgba(255, 255, 255, 0.8); background: rgba(255, 255, 255, 0.6); border-radius: 20px; outline: none; font-size: 1.1rem; font-weight: 600; color: #000; }
+.input-group input:focus { background: #fff; border-color: var(--ios-blue); box-shadow: 0 0 15px rgba(0, 122, 255, 0.3); }
+.submit-btn { width: 100%; padding: 18px; border: none; border-radius: 20px; font-size: 1.2rem; font-weight: 700; color: white; cursor: pointer; margin-top: 10px; }
+.ios-btn-primary { background: var(--ios-blue); }
+.ios-btn-secondary { background: var(--ios-orange); }
+
+/* ================= 4. RESPONSIVE DEVICE FIXES ================= */
+@media (max-width: 1024px) {
+    .ios-glass-header { padding-right: 65px !important; padding-left: 65px !important; padding-top: 15px !important; padding-bottom: 15px !important; }
+    .school-name { font-size: 1.35rem !important; margin-top: 0 !important; margin-bottom: 8px !important; }
+    .school-details { font-size: 0.75rem !important; row-gap: 8px !important; column-gap: 15px !important; }
+    .school-details span:not(:last-child)::after { display: none !important; }
+    .about-btn, .home-btn { top: 15px !important; transform: none !important; width: 40px !important; height: 40px !important; min-width: 40px !important; min-height: 40px !important; max-width: 40px !important; max-height: 40px !important; padding: 0 !important; border-radius: 50% !important; }
+    .about-btn:hover, .home-btn:hover { transform: scale(1.05) !important; }
+    .about-btn { right: 15px !important; left: auto !important; }
+    .home-btn { left: 15px !important; right: auto !important; }
+    .about-btn span, .home-btn span { display: none !important; }
+    .about-btn i, .home-btn i { font-size: 1.2rem !important; margin: 0 !important; }
+}
+
+@media (max-width: 600px) {
+    .ios-glass-header { padding-right: 55px !important; padding-left: 55px !important; }
+    .school-name { font-size: 1.2rem !important; }
+    .school-details { font-size: 0.7rem !important; }
+    .about-btn, .home-btn { width: 38px !important; height: 38px !important; min-width: 38px !important; min-height: 38px !important; top: 12px !important; }
+    .about-btn { right: 10px !important; }
+    .home-btn { left: 10px !important; }
+    #selection-view { padding: 30px 15px !important; width: 92% !important; }
+    .subtitle { margin-bottom: 20px !important; font-size: 0.9rem !important; }
+    .cards { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; gap: 15px !important; }
+    .card { flex: 1 !important; padding: 20px 10px !important; width: auto !important; }
+    .card-icon { font-size: 2.2rem !important; margin-bottom: 10px !important; }
+    .card h2 { font-size: 1.1rem !important; }
+}
+
+@media (max-height: 740px) and (max-width: 600px) {
+    .box-container { top: 46% !important; }
+}
+
+/* ==========================================
+   PREMIUM SCHOOL LOGO DESIGN (ALL PAGES)
+   ========================================== */
+.premium-logo {
+    height: 45px;
+    width: 45px;
+    object-fit: cover; /* Logo stretch nahi hoga */
+    border-radius: 50%; /* Ekdum Perfect Gol */
+    border: 2px solid rgba(255, 255, 255, 0.9); /* White premium border */
+    box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3); /* Neela (Blue) Glow Effect */
+    vertical-align: middle;
+    margin-right: 12px;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); /* Makkhan animation */
+    background: white; /* Agar PNG transparent hai toh peeche white base dega */
+}
+
+/* Hover karne pe glow aur bada hoga aur halka sa ghumega */
+.premium-logo:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 8px 25px rgba(0, 122, 255, 0.6);
+    border-color: var(--ios-blue);
+}
+
+/* -----------------------------------------------
+   BADE LOGOS KE LIYE FIX (Login Page & Dashboard) 
+   ----------------------------------------------- */
+.school-name .premium-logo,
+.school-logo-mini .premium-logo {
+    height: 55px;
+    width: 55px;
+    margin-right: 15px;
+    border: 3px solid white;
+    box-shadow: 0 8px 20px rgba(0, 122, 255, 0.25);
+}
+
+/* FOOTER LOGO FIX */
+.footer-brand .premium-logo {
+    height: 50px;
+    width: 50px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* ==========================================
+   🔥 LOGO BALANCE FIX (PC ORIGINAL, MOBILE SMALL) 🔥
+   ========================================== */
+
+/* Desktop view: Phele jaisa Bada aur Premium Logo */
+.nav-brand .premium-logo,
+.premium-logo {
+    height: 45px !important;
+    width: 45px !important;
+    margin-right: 10px !important;
+    border-width: 2px !important;
+}
+
+.nav-brand {
+    gap: 10px !important; 
+    align-items: center !important;
+}
+
+/* Mobile view: Sirf phone par logo text ke barabar chhota hoga */
+@media (max-width: 600px) {
+    .nav-brand .premium-logo,
+    .premium-logo {
+        height: 28px !important;
+        width: 28px !important;
+        margin-right: 0px !important;
+        border-width: 1.5px !important;
+    }
+    
+    .nav-brand {
+        font-size: 1.1rem !important; 
+        letter-spacing: -0.5px !important;
+        gap: 6px !important;
+    }
+}
+
+/* Footer ka logo hamesha bada rahega */
+.footer-brand .premium-logo {
+    height: 50px !important;
+    width: 50px !important;
+}
