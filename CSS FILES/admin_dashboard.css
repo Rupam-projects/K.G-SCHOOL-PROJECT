@@ -391,3 +391,57 @@ body { background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #
         background-position: center !important;
     }
 }
+/* ==================================================
+   🚀 SUPER OPTIMIZATION FOR LOW-END MOBILES & KEYBOARD FIX 🚀
+   ================================================== */
+
+@media (max-width: 1024px) {
+    /* 1. Turn off heavy Background Animations */
+    body {
+        animation: none !important;
+        background: linear-gradient(135deg, #e0c3fc, #c2e9fb) !important; /* Static soothing color */
+    }
+
+    /* 2. Hide Flying Particles (Massive Battery & CPU saver for phones) */
+    #particles-container {
+        display: none !important;
+    }
+
+    /* 3. Reduce Glass Blur Load (Fixes Lag & Screen Tearing) */
+    /* Blur 40px se 4px kar diya aur background almost solid white kar diya */
+    .glass-card, .panel, .auth-box, .profile-modal-box, .glass-sidebar {
+        backdrop-filter: blur(4px) !important;
+        -webkit-backdrop-filter: blur(4px) !important;
+        background: rgba(255, 255, 255, 0.95) !important; 
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    /* 4. Modal Overlay Optimization (Remove blur behind popup) */
+    .contact-modal-overlay {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(0, 0, 0, 0.75) !important; /* Solid dark transparent */
+    }
+
+    /* 5. 🔥 FIX KEYBOARD WHITE SCREEN TEARING 🔥 */
+    /* Keyboard aane par Box ko uchhalne se rokenge */
+    .auth-box, .profile-modal-box {
+        transform: none !important; 
+        transition: none !important;
+        animation: none !important;
+        margin: 0 auto 80px auto !important; /* Keyboard ke liye safe space */
+    }
+    
+    .contact-modal-overlay.active .auth-box,
+    .contact-modal-overlay.active .profile-modal-box {
+        transform: none !important;
+    }
+    
+    /* 6. Strict Viewport Lock */
+    html, body {
+        height: 100% !important;
+        width: 100% !important;
+        position: relative !important;
+        overflow-x: hidden !important;
+    }
+}
