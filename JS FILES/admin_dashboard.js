@@ -15,6 +15,18 @@ if (localStorage.getItem('db_version') !== 'v56_direct_password_update') {
 window.isPrincipal = false;
 const classOrder = { 'Lower Nursery': 1, 'Upper Nursery': 2, 'KG': 3, 'Class 1': 4, 'Class 2': 5, 'Class 3': 6, 'Class 4': 7 };
 
+function safeReadJSON(key, fallback) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        return parsed ?? fallback;
+    } catch (e) {
+        console.warn(`Corrupted storage for ${key}. Using fallback.`, e);
+        return fallback;
+    }
+}
+
 function getFeeForClass(className) {
     if (['Lower Nursery', 'Upper Nursery', 'KG'].includes(className)) return 800;
     if (['Class 1', 'Class 2'].includes(className)) return 1000;
@@ -23,46 +35,61 @@ function getFeeForClass(className) {
 }
 
 let db = {
-    students: JSON.parse(localStorage.getItem('nk_students')) || [],
-    teachers: JSON.parse(localStorage.getItem('nk_teachers')) || [],
-    notices: JSON.parse(localStorage.getItem('nk_notices')) || [],
-    assignments: JSON.parse(localStorage.getItem('nk_assignments')) || [],
-    events: JSON.parse(localStorage.getItem('nk_events')) || [],
-    logs: JSON.parse(localStorage.getItem('nk_logs')) || [{ msg: 'System initialized.', time: '09:00 AM', type: 'general' }],
-    chats: JSON.parse(localStorage.getItem('nk_chats')) || {},
-    submissions: JSON.parse(localStorage.getItem('nk_submissions')) || [],
-    gallery: JSON.parse(localStorage.getItem('nk_gallery')) || [] 
+    students: safeReadJSON('nk_students', []),
+    teachers: safeReadJSON('nk_teachers', []),
+    notices: safeReadJSON('nk_notices', []),
+    assignments: safeReadJSON('nk_assignments', []),
+    events: safeReadJSON('nk_events', []),
+    logs: safeReadJSON('nk_logs', [{ msg: 'System initialized.', time: '09:00 AM', type: 'general' }]),
+    chats: safeReadJSON('nk_chats', {}),
+    submissions: safeReadJSON('nk_submissions', []),
+    gallery: safeReadJSON('nk_gallery', [])
 };
+
+let renderQueued = false;
+
+function scheduleRenderAll() {
+    if (renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(() => {
+        renderQueued = false;
+        renderAll();
+    });
+}
 
 function saveDB() {
     try {
         db.students.sort((a, b) => (classOrder[a.class || ''] || 99) - (classOrder[b.class || ''] || 99));
-        localStorage.setItem('nk_students', JSON.stringify(db.students));
-        localStorage.setItem('nk_teachers', JSON.stringify(db.teachers));
-        localStorage.setItem('nk_notices', JSON.stringify(db.notices));
-        localStorage.setItem('nk_assignments', JSON.stringify(db.assignments));
-        localStorage.setItem('nk_events', JSON.stringify(db.events));
-        localStorage.setItem('nk_logs', JSON.stringify(db.logs));
-        localStorage.setItem('nk_chats', JSON.stringify(db.chats));
-        localStorage.setItem('nk_submissions', JSON.stringify(db.submissions));
-        localStorage.setItem('nk_gallery', JSON.stringify(db.gallery));
-        renderAll();
+        const payload = {
+            nk_students: db.students,
+            nk_teachers: db.teachers,
+            nk_notices: db.notices,
+            nk_assignments: db.assignments,
+            nk_events: db.events,
+            nk_logs: db.logs,
+            nk_chats: db.chats,
+            nk_submissions: db.submissions,
+            nk_gallery: db.gallery
+        };
+        Object.entries(payload).forEach(([key, value]) => {
+            localStorage.setItem(key, JSON.stringify(value));
+        });
+        scheduleRenderAll();
     } catch (e) { console.error("SaveDB Error:", e); }
 }
 
-function addLog(message, logType = 'general') { 
-    db.logs.unshift({ msg: message, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), type: logType }); 
-    if (db.logs.length > 20) db.logs.pop(); 
-    saveDB(); 
+function addLog(message, logType = 'general') {
+    db.logs.unshift({ msg: message, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), type: logType });
+    if (db.logs.length > 20) db.logs.pop();
 }
 
 function checkAndResetTeacherSalaries() {
-    let today = new Date(); 
+    let today = new Date();
     let lastReset = JSON.parse(localStorage.getItem('nk_salary_reset')) || { month: -1, year: -1 };
     if (today.getDate() > 3 && (lastReset.month !== today.getMonth() || lastReset.year !== today.getFullYear())) {
         db.teachers.forEach(t => t.sal = 'Pending');
         db.logs.unshift({ msg: 'Auto-System: Teacher Salaries marked Pending.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), type: 'finance' });
-        localStorage.setItem('nk_salary_reset', JSON.stringify({ month: today.getMonth(), year: today.getFullYear() })); 
+        localStorage.setItem('nk_salary_reset', JSON.stringify({ month: today.getMonth(), year: today.getFullYear() }));
         saveDB();
     }
 }
@@ -78,11 +105,11 @@ function updateAdminAlerts() {
 }
 
 // ==========================================
-// 3. UI RENDERING 
+// 3. UI RENDERING
 // ==========================================
 function renderAll() {
     try {
-        let schoolInfo = JSON.parse(localStorage.getItem('nk_school_info')) || { name: 'Netra K.G Center', tag: 'Operations Portal' };
+        let schoolInfo = safeReadJSON('nk_school_info', { name: 'Netra K.G Center', tag: 'Operations Portal' });
         let topHeader = document.getElementById('top-school-info');
         if(topHeader) topHeader.innerText = schoolInfo.name + ' - ' + schoolInfo.tag;
 
@@ -90,12 +117,12 @@ function renderAll() {
         let ovTch = document.getElementById('ov-tch'); if (ovTch) ovTch.innerText = db.teachers.length;
 
         let totalPaid = 0; let totalDue = 0;
-        let pendingStudentsList = []; 
+        let pendingStudentsList = [];
 
         db.students.forEach(s => {
             totalPaid += (s.totalPaidAmt || 0);
             let sDue = 0; let dueMonths = [];
-            
+
             if (s.ledger && s.ledger.length > 0) {
                 s.ledger.forEach(entry => {
                     if (entry.status === 'Pending' && entry.due > 0) { totalDue += entry.due; sDue += entry.due; dueMonths.push(entry.month.split(' ')[0]); }
@@ -111,7 +138,7 @@ function renderAll() {
 
         let ovFees = document.getElementById('ov-fees'); if (ovFees) ovFees.innerText = `₹ ${totalPaid}`;
         let ovDues = document.getElementById('ov-dues'); if (ovDues) ovDues.innerText = `₹ ${totalDue}`;
-        
+
         let tbody = document.getElementById('due-fees-table-body');
         if (tbody) {
             if (pendingStudentsList.length === 0) {
@@ -145,23 +172,23 @@ function renderAll() {
         let assignBody = document.getElementById('assign-table-body');
         if (assignBody) { assignBody.innerHTML = db.assignments.map((a, i) => `<tr><td style="color:#888; font-size:0.8rem;">${a.id}</td><td><strong>${a.title}</strong><br><span style="font-size:0.8rem; color:#666;">${a.sub} - Due: ${a.date}</span></td><td>${a.class} <br><span style="font-size:0.75rem; color:#888;">${a.section && a.section !== 'All' ? '(Sec '+a.section+')' : '(All Sec)'}</span></td><td><button class="action-icon edit" style="color:#28a745;" onclick="openEditAssignment(${i})"><i class="fa-solid fa-pen"></i></button><button class="action-icon delete" onclick="deleteRecord('assignments', ${i})"><i class="fa-solid fa-trash"></i></button></td></tr>`).join(''); }
 
-        renderGradingTable(); 
-        
-        let noticeBody = document.getElementById('notice-table-body'); 
+        renderGradingTable();
+
+        let noticeBody = document.getElementById('notice-table-body');
         if (noticeBody) { noticeBody.innerHTML = db.notices.map((n, i) => `<tr><td>${n.date || ''}</td><td>${n.title || ''}</td><td><button class="action-icon edit" style="color:#28a745;" onclick="openEditNotice(${i})"><i class="fa-solid fa-pen"></i></button><button class="action-icon delete" onclick="deleteRecord('notices', ${i})"><i class="fa-solid fa-trash"></i></button></td></tr>`).join(''); }
-        
+
         let logBody = document.getElementById('activity-log');
         if (logBody) { let visibleLogs = window.isPrincipal ? db.logs : db.logs.filter(l => l.type !== 'finance'); logBody.innerHTML = visibleLogs.length === 0 ? '<p style="color:#888; font-size:0.85rem; padding:10px;">No recent activity.</p>' : visibleLogs.map(l => `<li style="background:rgba(0,122,255,0.05); padding:10px; border-left:3px solid var(--ios-blue); border-radius:5px; margin-bottom:5px; font-size:0.85rem;"><strong>[Log]</strong> ${l.msg} <span style="float:right; color:#888;">${l.time}</span></li>`).join(''); }
 
         renderDropdowns();
         renderAdminChatList();
         renderGallery();
-        updateAdminAlerts(); 
+        updateAdminAlerts();
     } catch (e) { console.error("Render error:", e); }
 }
 
 window.renderStudents = function () {
-    const body = document.getElementById('student-table-body'); 
+    const body = document.getElementById('student-table-body');
     if (!body) return;
     let filterClass = document.getElementById('filter-class') ? document.getElementById('filter-class').value : 'All';
     let filterSection = document.getElementById('filter-section') ? document.getElementById('filter-section').value : 'All';
@@ -169,12 +196,14 @@ window.renderStudents = function () {
 
     let filteredHtml = '';
     let sortedStudents = [...db.students].sort((a,b) => (parseInt(a.roll)||99) - (parseInt(b.roll)||99));
+    let studentIndexMap = new Map(db.students.map((student, index) => [student.id, index]));
 
     sortedStudents.forEach((s) => {
-        let index = db.students.findIndex(x => x.id === s.id);
+        let index = studentIndexMap.get(s.id);
+        if (typeof index !== 'number') return;
         let sClass = s.class || ''; let sSec = s.section || ''; let sName = (s.name || '').toLowerCase(); let sId = (s.id || '').toLowerCase();
-        let classMatch = (filterClass === 'All') || (sClass === filterClass); 
-        let secMatch = (filterSection === 'All') || (sSec === filterSection); 
+        let classMatch = (filterClass === 'All') || (sClass === filterClass);
+        let secMatch = (filterSection === 'All') || (sSec === filterSection);
         let searchMatch = (filterSearch === '' || sName.includes(filterSearch) || sId.includes(filterSearch));
 
         if (classMatch && secMatch && searchMatch) {
@@ -187,7 +216,7 @@ window.renderStudents = function () {
 }
 
 // ==========================================
-// 4. SMART FEES ENGINE (SINGLE & BULK) 
+// 4. SMART FEES ENGINE (SINGLE & BULK)
 // ==========================================
 function renderDropdowns() { filterFeeStudents(); }
 
@@ -196,7 +225,7 @@ window.toggleFeeMode = function(mode) {
     let bBtn = document.getElementById('btn-bulk-fee');
     let sArea = document.getElementById('single-fee-area');
     document.getElementById('fee-mode').value = mode;
-    if(mode === 'single') { sBtn.className = 'btn-primary'; bBtn.className = 'btn-secondary'; sArea.style.display = 'block'; } 
+    if(mode === 'single') { sBtn.className = 'btn-primary'; bBtn.className = 'btn-secondary'; sArea.style.display = 'block'; }
     else { bBtn.className = 'btn-primary'; sBtn.className = 'btn-secondary'; sArea.style.display = 'none'; }
 }
 
@@ -215,16 +244,16 @@ window.filterFeeStudents = function() {
 }
 
 window.handleFeeUpdate = function (e) {
-    e.preventDefault(); 
+    e.preventDefault();
     let mode = document.getElementById('fee-mode').value;
-    let month = document.getElementById('fee-month').value; 
-    let action = document.getElementById('fee-status').value; 
+    let month = document.getElementById('fee-month').value;
+    let action = document.getElementById('fee-status').value;
     let rawInput = document.getElementById('fee-amount').value;
     let inputAmount = parseFloat(rawInput);
     let targetStudents = [];
 
     if (mode === 'single') {
-        let stuId = document.getElementById('fee-stu-select').value; 
+        let stuId = document.getElementById('fee-stu-select').value;
         if(!stuId) return alert("Please search and select a single student from the list.");
         let stuIndex = db.students.findIndex(s => s.id === stuId);
         if(stuIndex !== -1) targetStudents.push(db.students[stuIndex]);
@@ -244,23 +273,23 @@ window.handleFeeUpdate = function (e) {
         if (monthIndex === -1) { s.ledger.push({ month: month, due: getFeeForClass(s.class), paid: 0, status: 'Pending' }); monthIndex = s.ledger.length - 1; }
         let entry = s.ledger[monthIndex];
         let amtToProcess = inputAmount;
-        if (rawInput === '' || isNaN(amtToProcess) || amtToProcess < 0) { 
+        if (rawInput === '' || isNaN(amtToProcess) || amtToProcess < 0) {
             if (action === 'Paid') { amtToProcess = entry.due; } else if (action === 'Pending') { if (entry.due > 0) { amtToProcess = 0; } else { amtToProcess = getFeeForClass(s.class); } }
         }
-        if (action === 'Paid' && amtToProcess > 0) { 
+        if (action === 'Paid' && amtToProcess > 0) {
             entry.paid += amtToProcess; entry.due -= amtToProcess; if (entry.due <= 0) { entry.due = 0; entry.status = 'Paid'; } s.totalPaidAmt += amtToProcess; addLog(`₹${amtToProcess} received from ${s.name} (${s.id}).`, 'finance'); totalUpdated++;
-        } else if (action === 'Pending' && amtToProcess > 0) { 
+        } else if (action === 'Pending' && amtToProcess > 0) {
             entry.due += amtToProcess; entry.status = 'Pending'; addLog(`₹${amtToProcess} added as due for ${s.name}.`, 'finance'); totalUpdated++;
         } else if (action === 'Pending' && amtToProcess === 0) { entry.status = 'Pending'; totalUpdated++; }
         let isPending = s.ledger.some(en => en.status === 'Pending' && en.due > 0); s.fees = isPending ? 'Pending' : 'Paid';
     });
 
-    saveDB(); 
+    saveDB();
     if (mode === 'single') {
         let entry = targetStudents[0].ledger.find(en => en.month === month);
-        if (entry.due === 0) showSuccessPopup(`${month} Fees Fully Cleared!`); else showSuccessPopup(`Ledger Updated. Pending: ₹${entry.due}`); 
+        if (entry.due === 0) showSuccessPopup(`${month} Fees Fully Cleared!`); else showSuccessPopup(`Ledger Updated. Pending: ₹${entry.due}`);
     } else { showSuccessPopup(`Bulk Update Successful for ${totalUpdated} students!`); }
-    e.target.reset(); filterFeeStudents(); 
+    e.target.reset(); filterFeeStudents();
 }
 
 // ==========================================
@@ -272,7 +301,7 @@ window.loadTeacherAttendanceList = function() { let selDate = document.getElemen
 window.saveTeacherAttendance = function() { let selDate = document.getElementById('tch-att-date').value; if(!selDate) return showErrorPopup("Warning: Date cannot be empty."); db.teachers.forEach(t => { let radios = document.getElementsByName(`att_t_${t.id}`); if(radios && radios.length > 0) { let finalStatus = 'Present'; for(let i=0; i<radios.length; i++) { if(radios[i].checked) finalStatus = radios[i].value; } if(!t.attendance) t.attendance = []; let existingIndex = t.attendance.findIndex(a => a.date === selDate); if(existingIndex !== -1) { t.attendance[existingIndex].status = finalStatus; } else { t.attendance.push({ date: selDate, status: finalStatus }); } } }); addLog(`Staff Attendance saved for ${selDate}.`, 'general'); saveDB(); showSuccessPopup(`Staff Attendance Saved Successfully!`); }
 
 // ==========================================
-// 6. TEACHER GRADING SYSTEM 
+// 6. TEACHER GRADING SYSTEM
 // ==========================================
 window.renderGradingTable = function() { let filterClass = document.getElementById('grade-filter-class'); let selClass = filterClass ? filterClass.value : 'All'; let filterSec = document.getElementById('grade-filter-section'); let selSec = filterSec ? filterSec.value : 'All'; let body = document.getElementById('grading-table-body'); if(!body) return; let html = ''; db.submissions.forEach((sub, index) => { if(sub.teacherHidden) return; let matchClass = (selClass === 'All' || sub.class === selClass); let matchSec = (selSec === 'All' || sub.section === selSec); if(matchClass && matchSec) { let statusBadge = sub.status === 'Graded' ? `<span style="color:#28a745; font-weight:bold;">Graded (${sub.marks})</span>` : `<span style="color:#FF9500; font-weight:bold;">Pending Review</span>`; html += `<tr><td><strong>${sub.studentName}</strong><br><span style="font-size:0.8rem; color:#888;">ID: ${sub.studentId} | Sec: ${sub.section}</span></td><td>${sub.assignTitle}</td><td><a href="${sub.fileData}" download="${sub.studentName}_${sub.assignTitle}.pdf" class="btn-secondary small" style="text-decoration:none; padding:5px 10px; color:var(--ios-blue); border-color:var(--ios-blue);"><i class="fa-solid fa-file-pdf"></i> Download PDF</a></td><td><input type="text" id="mark-${index}" placeholder="e.g. 18/20" class="glass-input" style="width:90px; padding:6px; font-size:0.85rem;" value="${sub.marks || ''}"></td><td style="text-align:center;"><div style="display:flex; justify-content:center; gap:5px; margin-bottom:5px;"><button class="btn-primary small" style="background:#28a745; border:none; padding:5px 10px;" onclick="saveMarks(${index})" title="Post Marks"><i class="fa-solid fa-check"></i></button><button class="btn-secondary small" style="color:#dc3545; border-color:rgba(220,53,69,0.3); padding:5px 10px;" onclick="deleteSubmission(${index})" title="Clear from Queue"><i class="fa-solid fa-trash-can"></i></button></div><div>${statusBadge}</div></td></tr>`; } }); body.innerHTML = html === '' ? '<tr><td colspan="5" style="text-align:center; color:#888; padding:20px;">No submissions match this filter.</td></tr>' : html; }
 window.saveMarks = function(index) { let markInput = document.getElementById(`mark-${index}`).value; if(markInput.trim() === '') return alert('Please enter marks before saving.'); db.submissions[index].marks = markInput; db.submissions[index].status = 'Graded'; addLog(`Graded assignment for ${db.submissions[index].studentName}.`, 'academic'); saveDB(); renderGradingTable(); showSuccessPopup(`Marks updated successfully!`); }
@@ -283,84 +312,84 @@ window.deleteSubmission = function(index) { showConfirm(`Clear this from your qu
 // ==========================================
 let currentChatStudentId = null;
 
-function renderAdminChatList() { 
-    let list = document.getElementById('admin-chat-list'); 
-    if (!list) return; 
+function renderAdminChatList() {
+    let list = document.getElementById('admin-chat-list');
+    if (!list) return;
 
-    let chatStudents = [...db.students].sort((a, b) => { 
-        let aChats = db.chats[a.id] || []; let bChats = db.chats[b.id] || []; 
-        let aTime = aChats.length > 0 ? new Date('1970/01/01 ' + aChats[aChats.length-1].time).getTime() : 0; 
-        let bTime = bChats.length > 0 ? new Date('1970/01/01 ' + bChats[bChats.length-1].time).getTime() : 0; 
-        return bTime - aTime; 
+    let chatStudents = [...db.students].sort((a, b) => {
+        let aChats = db.chats[a.id] || []; let bChats = db.chats[b.id] || [];
+        let aTime = aChats.length > 0 ? new Date('1970/01/01 ' + aChats[aChats.length-1].time).getTime() : 0;
+        let bTime = bChats.length > 0 ? new Date('1970/01/01 ' + bChats[bChats.length-1].time).getTime() : 0;
+        return bTime - aTime;
     });
 
-    list.innerHTML = chatStudents.map(s => { 
-        let chats = db.chats[s.id] || []; 
-        let hasUnread = chats.length > 0 && chats[chats.length-1].sender === 'student'; 
-        let dotHtml = hasUnread ? `<div style="width:12px;height:12px;background:#ff3b30;border-radius:50%;position:absolute;top:10px;right:10px;animation:pulse-dot 2s infinite;"></div>` : ''; 
-        let pic = s.photo && s.photo !== '' ? s.photo : 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=150&h=150&fit=crop'; 
-        return `<div class="s-item" style="position:relative; display:flex; gap:10px; align-items:center; padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onclick="loadAdminChat('${s.id}')" id="chat-list-${s.id}"> ${dotHtml} <div class="s-icon" style="width:50px; height:50px; border-radius:50%; overflow:hidden; flex-shrink:0;"> <img src="${pic}" style="width:100%;height:100%;object-fit:cover;"> </div> <div class="s-info"> <h4 style="margin:0; font-size:1rem; color:var(--text-main);">${s.name||'User'}</h4> <p style="margin:0; font-size:0.75rem; color:#888;">ID: ${s.id} | Roll: ${s.roll||'--'}</p> <p style="margin:0; font-size:0.75rem; color:var(--ios-blue); font-weight:bold;">${s.class} (Sec ${s.section||'A'})</p> </div> </div>`; 
-    }).join(''); 
+    list.innerHTML = chatStudents.map(s => {
+        let chats = db.chats[s.id] || [];
+        let hasUnread = chats.length > 0 && chats[chats.length-1].sender === 'student';
+        let dotHtml = hasUnread ? `<div style="width:12px;height:12px;background:#ff3b30;border-radius:50%;position:absolute;top:10px;right:10px;animation:pulse-dot 2s infinite;"></div>` : '';
+        let pic = s.photo && s.photo !== '' ? s.photo : 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=150&h=150&fit=crop';
+        return `<div class="s-item" style="position:relative; display:flex; gap:10px; align-items:center; padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onclick="loadAdminChat('${s.id}')" id="chat-list-${s.id}"> ${dotHtml} <div class="s-icon" style="width:50px; height:50px; border-radius:50%; overflow:hidden; flex-shrink:0;"> <img src="${pic}" style="width:100%;height:100%;object-fit:cover;"> </div> <div class="s-info"> <h4 style="margin:0; font-size:1rem; color:var(--text-main);">${s.name||'User'}</h4> <p style="margin:0; font-size:0.75rem; color:#888;">ID: ${s.id} | Roll: ${s.roll||'--'}</p> <p style="margin:0; font-size:0.75rem; color:var(--ios-blue); font-weight:bold;">${s.class} (Sec ${s.section||'A'})</p> </div> </div>`;
+    }).join('');
 
     if (!currentChatStudentId && chatStudents.length > 0) {
         setTimeout(() => { let firstStuObj = document.getElementById(`chat-list-${chatStudents[0].id}`); if(firstStuObj) firstStuObj.click(); }, 200);
     }
 }
 
-window.loadAdminChat = function (stuId) { 
-    currentChatStudentId = stuId; 
-    let s = db.students.find(x => x.id === stuId); 
-    if (!s) return; 
-    document.querySelectorAll('.s-item').forEach(el => el.classList.remove('active')); 
-    let chatItem = document.getElementById(`chat-list-${stuId}`); 
-    if (chatItem) chatItem.classList.add('active'); 
-    
-    document.getElementById('chat-s-name').innerText = s.name; 
-    document.getElementById('chat-s-id').innerText = `ID: ${s.id} | Class: ${s.class}`; 
-    
+window.loadAdminChat = function (stuId) {
+    currentChatStudentId = stuId;
+    let s = db.students.find(x => x.id === stuId);
+    if (!s) return;
+    document.querySelectorAll('.s-item').forEach(el => el.classList.remove('active'));
+    let chatItem = document.getElementById(`chat-list-${stuId}`);
+    if (chatItem) chatItem.classList.add('active');
+
+    document.getElementById('chat-s-name').innerText = s.name;
+    document.getElementById('chat-s-id').innerText = `ID: ${s.id} | Class: ${s.class}`;
+
     let inputEl = document.getElementById('admin-chat-input');
     let btnEl = document.getElementById('admin-send-btn');
     if(inputEl) {
-        inputEl.disabled = false; 
+        inputEl.disabled = false;
         inputEl.placeholder = "Type reply here...";
         inputEl.onkeydown = function(e) { if(e.key === 'Enter') window.sendAdminMsg(); };
     }
     if(btnEl) btnEl.disabled = false;
-    
-    renderChatHistory(); 
+
+    renderChatHistory();
 }
 
-function renderChatHistory() { 
-    let box = document.getElementById('admin-chat-history'); 
-    if (!box) return; 
-    let chats = db.chats[currentChatStudentId] || []; 
-    
+function renderChatHistory() {
+    let box = document.getElementById('admin-chat-history');
+    if (!box) return;
+    let chats = db.chats[currentChatStudentId] || [];
+
     if (chats.length === 0) {
-        box.innerHTML = '<p style="text-align:center; color:#888; margin-top:20px;">No messages yet.</p>'; 
+        box.innerHTML = '<p style="text-align:center; color:#888; margin-top:20px;">No messages yet.</p>';
         return;
     }
 
     box.innerHTML = chats.map((c, index) => {
         let isAdmin = c.sender === 'admin';
         let actionHtml = '';
-        if (isAdmin) { actionHtml = `<div style="display:flex; gap:15px; justify-content:flex-end; margin-top:8px; border-top:1px solid rgba(255,255,255,0.3); padding-top:8px;"><span onclick="editAdminChatMsg(${index})" style="cursor:pointer; font-size:0.75rem; color:#fff; display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-pen"></i> Edit</span><span onclick="deleteAdminChatMsg(${index})" style="cursor:pointer; font-size:0.75rem; color:#ffcccc; display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-trash"></i> Delete</span></div>`; } 
+        if (isAdmin) { actionHtml = `<div style="display:flex; gap:15px; justify-content:flex-end; margin-top:8px; border-top:1px solid rgba(255,255,255,0.3); padding-top:8px;"><span onclick="editAdminChatMsg(${index})" style="cursor:pointer; font-size:0.75rem; color:#fff; display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-pen"></i> Edit</span><span onclick="deleteAdminChatMsg(${index})" style="cursor:pointer; font-size:0.75rem; color:#ffcccc; display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-trash"></i> Delete</span></div>`; }
         else { actionHtml = `<div style="display:flex; gap:15px; justify-content:flex-start; margin-top:8px; border-top:1px solid rgba(0,0,0,0.1); padding-top:8px;"><span onclick="deleteAdminChatMsg(${index})" style="cursor:pointer; font-size:0.75rem; color:#dc3545; display:flex; align-items:center; gap:5px;"><i class="fa-solid fa-trash"></i> Delete</span></div>`; }
 
         let editTag = c.edited ? ' <span style="font-style:italic;">(Edited)</span>' : '';
         return `<div class="msg ${isAdmin ? 'admin-msg' : 'student-msg'}"><span style="font-size:0.7rem; opacity:0.7; display:block; margin-bottom:3px;">${isAdmin ? 'Admin' : 'Student'} • ${c.time}${editTag}</span><div style="word-wrap: break-word;">${c.text}</div>${actionHtml}</div>`;
-    }).join(''); 
-    
-    box.scrollTop = box.scrollHeight; 
+    }).join('');
+
+    box.scrollTop = box.scrollHeight;
 }
 
-window.sendAdminMsg = function () { 
-    let input = document.getElementById('admin-chat-input'); 
-    if (!input || input.value.trim() === '' || !currentChatStudentId) return; 
-    if (!db.chats[currentChatStudentId]) db.chats[currentChatStudentId] = []; 
-    db.chats[currentChatStudentId].push({ sender: 'admin', text: input.value, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }); 
-    input.value = ''; 
-    saveDB(); 
-    renderChatHistory(); 
+window.sendAdminMsg = function () {
+    let input = document.getElementById('admin-chat-input');
+    if (!input || input.value.trim() === '' || !currentChatStudentId) return;
+    if (!db.chats[currentChatStudentId]) db.chats[currentChatStudentId] = [];
+    db.chats[currentChatStudentId].push({ sender: 'admin', text: input.value, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+    input.value = '';
+    saveDB();
+    renderChatHistory();
 }
 
 window.editAdminChatMsg = function(index) {
@@ -369,7 +398,7 @@ window.editAdminChatMsg = function(index) {
     let newText = prompt("Edit your message:", oldText);
     if (newText !== null && newText.trim() !== "" && newText.trim() !== oldText) {
         db.chats[currentChatStudentId][index].text = newText.trim();
-        db.chats[currentChatStudentId][index].edited = true; 
+        db.chats[currentChatStudentId][index].edited = true;
         saveDB(); renderChatHistory();
     }
 }
@@ -395,17 +424,17 @@ window.deleteGalleryImage = function(index) { showConfirm("Delete this photo fro
 window.loadReportStudents = function() {
     let selClass = document.getElementById('report-class').value; let selSec = document.getElementById('report-sec').value; let searchId = document.getElementById('report-id-search').value.toLowerCase().trim();
     let body = document.getElementById('report-student-list'); if(!body) return;
-    
+
     let filtered = db.students.filter(s => {
-        if (searchId !== '') { return (s.id||'').toLowerCase().includes(searchId) || (s.roll||'').toString() === searchId || (s.name||'').toLowerCase().includes(searchId); } 
+        if (searchId !== '') { return (s.id||'').toLowerCase().includes(searchId) || (s.roll||'').toString() === searchId || (s.name||'').toLowerCase().includes(searchId); }
         else { return s.class === selClass && (selSec === 'All' || s.section === selSec); }
-    }); 
-    
+    });
+
     filtered.sort((a,b) => (parseInt(a.roll)||99) - (parseInt(b.roll)||99));
     if(filtered.length === 0) { body.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:#888;">No students found for your search/filter.</td></tr>`; return; }
-    
+
     body.innerHTML = filtered.map(s => {
-        let btnColor = s.reportCard ? 'var(--ios-orange)' : 'var(--ios-blue)'; 
+        let btnColor = s.reportCard ? 'var(--ios-orange)' : 'var(--ios-blue)';
         let btnText = s.reportCard ? '<i class="fa-solid fa-rotate-right"></i> Update PDF' : '<i class="fa-solid fa-upload"></i> Upload PDF';
         let clearBtnHtml = s.reportCard ? `<button class="btn-secondary small" style="color:#dc3545; border-color:rgba(220,53,69,0.3); padding:5px 8px; margin-left:5px;" onclick="clearReport('${s.id}')" title="Remove PDF"><i class="fa-solid fa-trash"></i></button>` : '';
 
@@ -429,24 +458,24 @@ window.updateSchoolInfo = function(e) { e.preventDefault(); let name = document.
 window.resetStudentPass = function(e) { e.preventDefault(); let stuId = document.getElementById('set-stu-id').value.trim(); let newPass = document.getElementById('set-stu-newpass').value.trim(); if(!stuId || !newPass) return alert("Fill all fields."); let stuIndex = db.students.findIndex(s => s.id === stuId); if(stuIndex !== -1) { db.students[stuIndex].pass = newPass; addLog(`Password reset for ${db.students[stuIndex].name}.`, 'general'); saveDB(); showSuccessPopup("Student password reset successfully!"); e.target.reset(); } else { showErrorPopup("Student ID not found!"); } }
 
 // 1. UPDATE LOGIN PAGE CREDENTIALS (INDEX.HTML)
-window.updatePortalLogin = function(e) { 
-    e.preventDefault(); 
-    let newUser = document.getElementById('set-login-user').value.trim(); 
-    let newPass = document.getElementById('set-login-pass').value.trim(); 
-    
+window.updatePortalLogin = function(e) {
+    e.preventDefault();
+    let newUser = document.getElementById('set-login-user').value.trim();
+    let newPass = document.getElementById('set-login-pass').value.trim();
+
     if(newUser && newPass) {
         // Bina kisi check ke seedha database update maar diya
         localStorage.setItem('admin_login_username', newUser);
         localStorage.setItem('admin_login_password', newPass);
-        
+
         // Backup keys in case index.html uses different names
         localStorage.setItem('nk_admin_id', newUser);
         localStorage.setItem('nk_admin_pass', newPass);
         localStorage.setItem('nk_login_user', newUser);
         localStorage.setItem('nk_login_pass', newPass);
-        
-        showSuccessPopup("Login Page Credentials Updated!"); 
-        e.target.reset(); 
+
+        showSuccessPopup("Login Page Credentials Updated!");
+        e.target.reset();
     }
 }
 
@@ -507,19 +536,19 @@ window.toggleOTPView = function () { document.getElementById('auth-pass-view').s
 window.togglePassView = function () { document.getElementById('auth-otp-view').style.display = 'none'; document.getElementById('auth-new-pass-view').style.display = 'none'; document.getElementById('auth-pass-view').style.display = 'block'; }
 
 // This ensures initial login STILL requires correct password to unlock Tabs.
-window.verifyMaster = function () { 
+window.verifyMaster = function () {
     let actualOld = localStorage.getItem('nk_master_pass');
     if(!actualOld) actualOld = 'admin123';
     actualOld = actualOld.replace(/^["']|["']$/g, '').replace(/[\r\n]+/g, "").trim();
-    
+
     let typedPass = document.getElementById('master-pass').value;
     let cleanTypedPass = typedPass.replace(/^["']|["']$/g, '').replace(/[\r\n]+/g, "").trim();
-    
-    if (cleanTypedPass === actualOld || typedPass === "FORCE_RESET") { 
-        grantPrincipal(); 
-    } else { 
-        showErrorPopup('Incorrect Master Password.'); 
-    } 
+
+    if (cleanTypedPass === actualOld || typedPass === "FORCE_RESET") {
+        grantPrincipal();
+    } else {
+        showErrorPopup('Incorrect Master Password.');
+    }
 }
 window.verifyOTP = function () { if (document.getElementById('otp-input').value === '1234') { document.getElementById('auth-otp-view').style.display = 'none'; document.getElementById('auth-new-pass-view').style.display = 'block'; } else { showErrorPopup('Invalid OTP.'); } }
 

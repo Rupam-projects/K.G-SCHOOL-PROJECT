@@ -2,17 +2,42 @@
 // 🔥 THE V55 STUDENT DASHBOARD ENGINE 🔥
 // ==========================================
 
-function fetchFreshData() {
-    return {
-        notices: JSON.parse(localStorage.getItem('nk_notices')) || [],
-        assignments: JSON.parse(localStorage.getItem('nk_assignments')) || [],
-        events: JSON.parse(localStorage.getItem('nk_events')) || [],
-        students: JSON.parse(localStorage.getItem('nk_students')) || [],
-        submissions: JSON.parse(localStorage.getItem('nk_submissions')) || [],
-        chats: JSON.parse(localStorage.getItem('nk_chats')) || {},
-        gallery: JSON.parse(localStorage.getItem('nk_gallery')) || [],
-        school: JSON.parse(localStorage.getItem('nk_school_info')) || { name: 'Netra K.G Center', tag: 'Operations Portal' }
+let studentDbCache = null;
+
+function safeReadJSON(key, fallback) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        return parsed ?? fallback;
+    } catch (e) {
+        console.warn(`Corrupted storage for ${key}. Using fallback.`, e);
+        return fallback;
+    }
+}
+
+function invalidateStudentCache() {
+    studentDbCache = null;
+}
+
+function writeJSON(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+    invalidateStudentCache();
+}
+
+function fetchFreshData(force = false) {
+    if (!force && studentDbCache) return studentDbCache;
+    studentDbCache = {
+        notices: safeReadJSON('nk_notices', []),
+        assignments: safeReadJSON('nk_assignments', []),
+        events: safeReadJSON('nk_events', []),
+        students: safeReadJSON('nk_students', []),
+        submissions: safeReadJSON('nk_submissions', []),
+        chats: safeReadJSON('nk_chats', {}),
+        gallery: safeReadJSON('nk_gallery', []),
+        school: safeReadJSON('nk_school_info', { name: 'Netra K.G Center', tag: 'Operations Portal' })
     };
+    return studentDbCache;
 }
 
 function updateStudentAlerts() {
@@ -71,9 +96,9 @@ function renderStudentDashboard() {
     // SAFARI / IPHONE COLOR BUG FIX
     let circle = document.getElementById('att-circle');
     if(circle) {
-        let safeColor = '#e5e5ea'; 
-        if (totalDays > 0) { 
-            safeColor = attPercent >= 75 ? '#007AFF' : (attPercent >= 50 ? '#FF9500' : '#dc3545'); 
+        let safeColor = '#e5e5ea';
+        if (totalDays > 0) {
+            safeColor = attPercent >= 75 ? '#007AFF' : (attPercent >= 50 ? '#FF9500' : '#dc3545');
         }
         circle.style.background = `conic-gradient(${safeColor} ${attPercent}%, rgba(0,0,0,0.05) 0deg)`;
     }
@@ -97,7 +122,7 @@ function renderStudentDashboard() {
     // ==========================================
     // LEDGER & FEES
     // ==========================================
-    let totalPaidAmt = currentStudent.totalPaidAmt || 0; 
+    let totalPaidAmt = currentStudent.totalPaidAmt || 0;
     let totalDueAmt = 0; let currentSessionFee = 0; let ledgerHtml = '';
     function getFeeForClass(className) { if(['Lower Nursery', 'Upper Nursery', 'KG'].includes(className)) return 800; if(['Class 1', 'Class 2'].includes(className)) return 1000; if(['Class 3', 'Class 4'].includes(className)) return 1200; return 1500; }
     let baseClassFee = getFeeForClass(currentStudent.class);
@@ -113,7 +138,7 @@ function renderStudentDashboard() {
             let amountText = entry.status === 'Pending' ? `<span style="color:#dc3545; font-weight:bold;">Due: ₹${entry.due}</span><br><span style="font-size:0.75rem; color:#28a745;">(Paid: ₹${entry.paid})</span>` : `<span style="color:#28a745; font-weight:bold;">Paid: ₹${entry.paid}</span>`;
             ledgerHtml += `<tr style="${rowStyle}"><td style="${entry.status === 'Pending' ? 'font-weight:bold; color:#dc3545;' : ''}">${icon}${entry.month}</td><td>${amountText}</td><td><span class="badge" style="color:${badgeColor}; border:1px solid ${badgeColor}; padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:bold;">${entry.status}</span></td></tr>`;
         });
-        
+
         if(totalDueAmt > 0) {
             let lastDue = parseFloat(localStorage.getItem('nk_stu_last_due')) || 0;
             if(totalDueAmt > lastDue) { localStorage.setItem('nk_stu_fee_alert_viewed', 'false'); }
@@ -134,7 +159,7 @@ function renderStudentDashboard() {
     if(noticeList) noticeList.innerHTML = db.notices.length === 0 ? '<p style="color:var(--text-secondary); font-size:0.9rem;">No new announcements.</p>' : db.notices.map(n => `<li style="padding:10px; border-left:3px solid var(--ios-blue); background:rgba(0,122,255,0.05); margin-bottom:10px; border-radius:5px;"><strong>[${n.date}] ${n.title}</strong><br><span style="font-size:0.85rem; color:#555;">${n.body}</span></li>`).join('');
     const eventsList = document.getElementById('events-list');
     if(eventsList) eventsList.innerHTML = db.events.length === 0 ? '<tr><td colspan="2" style="text-align:center; color:#888;">No events.</td></tr>' : db.events.map(e => `<tr><td style="color:var(--ios-blue); font-weight:700;">${e.date}</td><td>${e.title}</td></tr>`).join('');
-    
+
     // MARKSHEET LOGIC
     let reportArea = document.getElementById('stu-marksheet-area');
     if(reportArea) {
@@ -157,12 +182,12 @@ function renderStudentDashboard() {
 
     let galGrid = document.getElementById('stu-gallery-grid');
     if(galGrid) {
-        if(db.gallery.length === 0) { galGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align:center; color:#888;">No photos to display.</p>'; } 
+        if(db.gallery.length === 0) { galGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align:center; color:#888;">No photos to display.</p>'; }
         else { galGrid.innerHTML = db.gallery.map((g, i) => `<div class="gallery-item" onclick="openLightbox(${i})"><img src="${g.src}"></div>`).join(''); }
     }
 
     renderStudentAssignments();
-    updateStudentAlerts(); 
+    updateStudentAlerts();
 }
 
 window.triggerMarksheetDownload = function(pdfData, stuName) {
@@ -172,13 +197,13 @@ window.triggerMarksheetDownload = function(pdfData, stuName) {
     let btn = document.getElementById('dl-mark-btn');
     if(btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Locking Section...'; btn.disabled = true; btn.style.opacity = '0.7'; }
 
-    let toast = document.getElementById('toast-msg'); 
+    let toast = document.getElementById('toast-msg');
     if(toast) { toast.innerText = "Download Started! Section is being locked."; toast.style.bottom = '20px'; setTimeout(() => { toast.style.bottom = '-50px'; }, 3000); }
 
     setTimeout(() => {
         let db = fetchFreshData(); let currentId = localStorage.getItem('current_student_id') || 'NKGC-101'; let stuIndex = db.students.findIndex(s => s.id === currentId);
-        if(stuIndex !== -1) { db.students[stuIndex].marksheetLocked = true; localStorage.setItem('nk_students', JSON.stringify(db.students)); renderStudentDashboard(); }
-    }, 1500); 
+        if(stuIndex !== -1) { db.students[stuIndex].marksheetLocked = true; writeJSON('nk_students', db.students); renderStudentDashboard(); }
+    }, 1500);
 }
 
 let currentSlideIndex = 0;
@@ -194,16 +219,16 @@ window.renderStudentAssignments = function() {
     let filterStatus = document.getElementById('stu-filter-status') ? document.getElementById('stu-filter-status').value : 'Active'; let filterClass = document.getElementById('stu-filter-class') ? document.getElementById('stu-filter-class').value : 'All'; let filterSub = document.getElementById('stu-filter-sub') ? document.getElementById('stu-filter-sub').value : 'All';
     let html = '';
     relevantTasks.forEach(a => {
-        if (filterClass !== 'All' && a.class !== filterClass) return; if (filterSub !== 'All' && a.sub !== filterSub) return; 
+        if (filterClass !== 'All' && a.class !== filterClass) return; if (filterSub !== 'All' && a.sub !== filterSub) return;
         let existingSub = mySubs.find(s => s.assignId === a.id); let isGraded = existingSub && existingSub.status === 'Graded'; let isHidden = existingSub && existingSub.studentHidden;
-        if (filterStatus === 'Active' && isGraded) return; if (filterStatus === 'Graded' && (!isGraded || isHidden)) return; if (filterStatus === 'Hidden' && !isHidden) return; 
+        if (filterStatus === 'Active' && isGraded) return; if (filterStatus === 'Graded' && (!isGraded || isHidden)) return; if (filterStatus === 'Hidden' && !isHidden) return;
         let actionHtml = '';
         if (!existingSub) {
-            if (a.class === currentStudent.class && (!a.section || a.section === 'All' || a.section === currentStudent.section)) { actionHtml = `<div style="display:flex; align-items:center; gap:10px;"><label class="btn-secondary small" style="cursor:pointer; font-size:0.75rem; padding:5px 10px;"><i class="fa-solid fa-paperclip"></i> Select PDF<input type="file" id="file-${a.id}" accept=".pdf" style="display:none;" onchange="updateFileName(this, 'fname-${a.id}')"></label><span id="fname-${a.id}" style="font-size:0.7rem; color:#888; max-width:80px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">No file</span><button class="btn-primary small" style="padding:5px 10px; background:var(--ios-blue);" onclick="submitAssignment('${a.id}', '${a.title}')"><i class="fa-solid fa-upload"></i></button></div>`; } 
+            if (a.class === currentStudent.class && (!a.section || a.section === 'All' || a.section === currentStudent.section)) { actionHtml = `<div style="display:flex; align-items:center; gap:10px;"><label class="btn-secondary small" style="cursor:pointer; font-size:0.75rem; padding:5px 10px;"><i class="fa-solid fa-paperclip"></i> Select PDF<input type="file" id="file-${a.id}" accept=".pdf" style="display:none;" onchange="updateFileName(this, 'fname-${a.id}')"></label><span id="fname-${a.id}" style="font-size:0.7rem; color:#888; max-width:80px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">No file</span><button class="btn-primary small" style="padding:5px 10px; background:var(--ios-blue);" onclick="submitAssignment('${a.id}', '${a.title}')"><i class="fa-solid fa-upload"></i></button></div>`; }
             else { actionHtml = `<span style="color:#888; font-size:0.8rem; font-style:italic;">Missed Task</span>`; }
-        } else if (existingSub.status === 'Submitted') { actionHtml = `<span class="badge" style="color:#FF9500; border:1px solid #FF9500;">Pending Review</span>`; } 
+        } else if (existingSub.status === 'Submitted') { actionHtml = `<span class="badge" style="color:#FF9500; border:1px solid #FF9500;">Pending Review</span>`; }
         else if (existingSub.status === 'Graded') {
-            if (isHidden) { actionHtml = `<span class="badge" style="color:#28a745; border:1px solid #28a745; background:rgba(40,167,69,0.1); margin-right:10px;">Marks: ${existingSub.marks}</span><button class="btn-secondary small" style="color:var(--ios-blue); border-color:var(--ios-blue); padding:4px 8px;" onclick="toggleHideAssignment('${a.id}', false)"><i class="fa-solid fa-eye"></i> Restore</button>`; } 
+            if (isHidden) { actionHtml = `<span class="badge" style="color:#28a745; border:1px solid #28a745; background:rgba(40,167,69,0.1); margin-right:10px;">Marks: ${existingSub.marks}</span><button class="btn-secondary small" style="color:var(--ios-blue); border-color:var(--ios-blue); padding:4px 8px;" onclick="toggleHideAssignment('${a.id}', false)"><i class="fa-solid fa-eye"></i> Restore</button>`; }
             else { actionHtml = `<span class="badge" style="color:#28a745; border:1px solid #28a745; background:rgba(40,167,69,0.1); margin-right:10px;">Marks: ${existingSub.marks}</span><button class="btn-secondary small" style="color:#dc3545; border-color:rgba(220,53,69,0.3); padding:4px 8px;" onclick="toggleHideAssignment('${a.id}', true)"><i class="fa-solid fa-eye-slash"></i> Hide</button>`; }
         }
         html += `<tr><td style="color:var(--ios-blue); font-weight:700;">${a.sub}<br><span style="font-size:0.7rem; color:#888; font-weight:normal;">${a.class} ${a.section && a.section !== 'All' ? '(Sec '+a.section+')' : ''}</span></td><td>${a.title}</td><td>${a.date}</td><td>${actionHtml}</td></tr>`;
@@ -219,32 +244,32 @@ window.submitAssignment = function(assignId, assignTitle) {
     let reader = new FileReader();
     reader.onload = function(e) {
         db.submissions.push({ assignId: assignId, assignTitle: assignTitle, studentId: currentStudent.id, studentName: currentStudent.name, class: currentStudent.class, section: currentStudent.section, fileData: e.target.result, status: 'Submitted', marks: '', teacherHidden: false, studentHidden: false });
-        localStorage.setItem('nk_submissions', JSON.stringify(db.submissions));
+        writeJSON('nk_submissions', db.submissions);
         let toast = document.getElementById('toast-msg'); if(toast) { toast.innerText = "Assignment Submitted!"; toast.style.bottom = '20px'; setTimeout(() => { toast.style.bottom = '-50px'; }, 3000); }
-        renderStudentAssignments(); 
+        renderStudentAssignments();
     };
     reader.readAsDataURL(fileInput.files[0]);
 }
 
-window.toggleHideAssignment = function(assignId, hideStatus) { let currentId = localStorage.getItem('current_student_id') || 'NKGC-101'; let allSubs = JSON.parse(localStorage.getItem('nk_submissions')) || []; let subIndex = allSubs.findIndex(s => s.assignId === assignId && s.studentId === currentId); if(subIndex !== -1) { allSubs[subIndex].studentHidden = hideStatus; localStorage.setItem('nk_submissions', JSON.stringify(allSubs)); renderStudentAssignments(); } }
+window.toggleHideAssignment = function(assignId, hideStatus) { let currentId = localStorage.getItem('current_student_id') || 'NKGC-101'; let allSubs = safeReadJSON('nk_submissions', []); let subIndex = allSubs.findIndex(s => s.assignId === assignId && s.studentId === currentId); if(subIndex !== -1) { allSubs[subIndex].studentHidden = hideStatus; writeJSON('nk_submissions', allSubs); renderStudentAssignments(); } }
 
 // ==========================================
 // 🔥 STUDENT CHAT SYSTEM WITH EDIT/DELETE 🔥
 // ==========================================
-window.renderStudentChat = function() { 
-    let box = document.getElementById('chat-history'); 
-    if(!box) return; 
-    let currentId = localStorage.getItem('current_student_id') || 'NKGC-101'; 
-    let allChats = JSON.parse(localStorage.getItem('nk_chats')) || {}; 
-    let myChats = allChats[currentId] || []; 
-    
+window.renderStudentChat = function() {
+    let box = document.getElementById('chat-history');
+    if(!box) return;
+    let currentId = localStorage.getItem('current_student_id') || 'NKGC-101';
+    let allChats = safeReadJSON('nk_chats', {});
+    let myChats = allChats[currentId] || [];
+
     if(myChats.length === 0) {
-        box.innerHTML = '<p style="text-align:center; color:#aaa; font-size:0.85rem; margin-top:20px;">Start your conversation with the Administration here.</p>'; 
-    } else { 
+        box.innerHTML = '<p style="text-align:center; color:#aaa; font-size:0.85rem; margin-top:20px;">Start your conversation with the Administration here.</p>';
+    } else {
         box.innerHTML = myChats.map((c, index) => {
             let isStudent = c.sender === 'student';
             let actionHtml = '';
-            
+
             // Edit/Delete features
             if (isStudent) {
                 actionHtml = `
@@ -264,51 +289,51 @@ window.renderStudentChat = function() {
                 <div style="word-wrap: break-word;">${c.text}</div>
                 ${actionHtml}
             </div>`;
-        }).join(''); 
-        box.scrollTop = box.scrollHeight; 
-    } 
+        }).join('');
+        box.scrollTop = box.scrollHeight;
+    }
 }
 
 window.editStudentChatMsg = function(index) {
     let currentId = localStorage.getItem('current_student_id') || 'NKGC-101';
-    let allChats = JSON.parse(localStorage.getItem('nk_chats')) || {};
+    let allChats = safeReadJSON('nk_chats', {});
     if(!allChats[currentId]) return;
-    
+
     let oldText = allChats[currentId][index].text;
     let newText = prompt("Edit your message:", oldText);
-    
+
     if (newText !== null && newText.trim() !== "" && newText.trim() !== oldText) {
         allChats[currentId][index].text = newText.trim();
         allChats[currentId][index].edited = true;
-        localStorage.setItem('nk_chats', JSON.stringify(allChats));
+        writeJSON('nk_chats', allChats);
         renderStudentChat();
     }
 }
 
 window.deleteStudentChatMsg = function(index) {
     let currentId = localStorage.getItem('current_student_id') || 'NKGC-101';
-    let allChats = JSON.parse(localStorage.getItem('nk_chats')) || {};
+    let allChats = safeReadJSON('nk_chats', {});
     if(!allChats[currentId]) return;
 
     if (confirm("Are you sure you want to delete this message?")) {
         allChats[currentId].splice(index, 1);
-        localStorage.setItem('nk_chats', JSON.stringify(allChats));
+        writeJSON('nk_chats', allChats);
         renderStudentChat();
     }
 }
 
 function createParticles() { const c = document.getElementById('particles-container'); if(!c) return; c.innerHTML = ''; for(let i=0; i<15; i++) { let p = document.createElement('div'); p.className = 'glass-particle'; let size = Math.random() * 30 + 10; p.style.width = size + 'px'; p.style.height = size + 'px'; p.style.left = (Math.random() * 100) + 'vw'; p.style.animationDuration = (Math.random() * 12 + 8) + 's'; c.appendChild(p); } }
 
-window.addEventListener('storage', () => { renderStudentDashboard(); renderStudentChat(); updateStudentAlerts(); });
+window.addEventListener('storage', () => { invalidateStudentCache(); renderStudentDashboard(); renderStudentChat(); updateStudentAlerts(); });
 
 document.addEventListener('DOMContentLoaded', () => {
     const sendBtn = document.getElementById('send-msg-btn'); const inputField = document.getElementById('chat-input');
     if(sendBtn && inputField) {
         sendBtn.onclick = function() {
             let val = inputField.value.trim(); if(val === '') return;
-            let currentId = localStorage.getItem('current_student_id') || 'NKGC-101'; let allChats = JSON.parse(localStorage.getItem('nk_chats')) || {}; if(!allChats[currentId]) allChats[currentId] = [];
+            let currentId = localStorage.getItem('current_student_id') || 'NKGC-101'; let allChats = safeReadJSON('nk_chats', {}); if(!allChats[currentId]) allChats[currentId] = [];
             allChats[currentId].push({ sender: 'student', text: val, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
-            localStorage.setItem('nk_chats', JSON.stringify(allChats)); inputField.value = ''; renderStudentChat();
+            writeJSON('nk_chats', allChats); inputField.value = ''; renderStudentChat();
         }
         inputField.onkeydown = function(e) { if(e.key === 'Enter') sendBtn.onclick(); };
     }
@@ -321,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active')); this.classList.add('active');
             let tId = this.getAttribute('data-target');
             document.querySelectorAll('.tab-section').forEach(s => { s.classList.remove('active'); if(s.id === 'tab-' + tId) { s.classList.add('active'); s.style.animation='none'; void s.offsetWidth; s.style.animation=null; } });
-            
+
             let db = fetchFreshData();
             if(tId === 'fees') { localStorage.setItem('nk_stu_fee_alert_viewed', 'true'); this.classList.remove('has-alert'); }
             else if(tId === 'messages') { let myChats = db.chats[localStorage.getItem('current_student_id') || 'NKGC-101'] || []; localStorage.setItem('nk_stu_read_chat_len', myChats.length); this.classList.remove('has-alert'); renderStudentChat(); }
